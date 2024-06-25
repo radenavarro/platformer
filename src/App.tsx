@@ -1,12 +1,10 @@
-
 import './App.css'
 import Game from './views/Game'
 
-function App() {
-
+function App () {
   return (
     <>
-      <Game/>
+      <Game />
     </>
   )
 }
