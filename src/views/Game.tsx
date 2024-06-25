@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { playerSprites } from '../constants/player'
 
 const SPEED = 5
@@ -21,10 +21,15 @@ const Game = () => {
   const spritesRef = useRef(playerSprites())
   const imagesRef = useRef({})
 
-  const canvas = canvasRef.current
-  const ctx = canvas?.getContext('2d')
+  const canvas:HTMLCanvasElement = canvasRef.current
+  const ctx:CanvasRenderingContext2D = canvas ? canvas.getContext('2d') : undefined
 
-  const loadImage = (src) => {
+  /**
+   *
+   * @param src
+   * @returns
+   */
+  const loadImage = (src: string) => {
     return new Promise((resolve, reject) => {
       const img = new Image()
       img.onload = () => resolve(img)
@@ -33,6 +38,9 @@ const Game = () => {
     })
   }
 
+  /**
+   *
+   */
   const loadAllImages = async () => {
     try {
       for (const [key, value] of Object.entries(spritesRef.current)) {
@@ -44,14 +52,25 @@ const Game = () => {
     }
   }
 
+  /**
+   *
+   * @param e
+   */
   const handleKeyDown = (e) => {
     keysPressed.current[e.key] = true
   }
 
+  /**
+   *
+   * @param e
+   */
   const handleKeyUp = (e) => {
     keysPressed.current[e.key] = false
   }
 
+  /**
+   *
+   */
   const updateGame = () => {
     setPlayerState(prev => {
       const newState = { ...prev }
@@ -90,14 +109,17 @@ const Game = () => {
     animationFrameId.current = requestAnimationFrame(updateGame)
   }
 
+  /**
+   *
+   */
   const drawBackground = () => {
     ctx.fillStyle = BG
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    // Aquí podrías añadir más elementos de fondo si lo deseas
-    // Por ejemplo, dibujar nubes, montañas, etc.
   }
 
+  /**
+   *
+   */
   const drawPlayer = () => {
     const currentAction = `${playerState.action}${playerState.direction.charAt(0).toUpperCase() + playerState.direction.slice(1)}`
     const spriteInfo = spritesRef.current[currentAction]
@@ -111,16 +133,22 @@ const Game = () => {
       } else {
         ctx.translate(playerState.x, playerState.y)
       }
-      ctx.drawImage(currentImage, 0, 0)
+      ctx.drawImage(currentImage, 0, canvas.height / 2)
       ctx.restore()
     }
   }
 
+  /**
+   * Render en canvas por orden
+   */
   const render = () => {
     drawBackground()
     drawPlayer()
   }
 
+  /**
+   * Cargar imagenes & listeners
+   */
   useEffect(() => {
     loadAllImages()
 
@@ -136,6 +164,9 @@ const Game = () => {
     }
   }, [])
 
+  /**
+   * Llamar a renderizar en canvas si cambia el jugador
+   */
   useEffect(() => {
     if (!imagesLoaded) return
     render()
