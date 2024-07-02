@@ -1,70 +1,34 @@
 import { useEffect, useRef, useState } from 'react'
 import { playerSprites } from '../constants/player'
+import { useImages } from '../hooks/useImages'
 
 const SPEED = 5
 const BG = '#88bef5'
 
 const Game = () => {
-  const canvasRef = useRef(null)
-  const [imagesLoaded, setImagesLoaded] = useState(false)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  // const [imagesLoaded, setImagesLoaded] = useState(false)
   const [playerState, setPlayerState] = useState({
     x: 0,
     y: 0,
     direction: 'right',
     action: 'idle',
     currentFrame: 0,
-    frameCount: 0
+    frameCount: 0,
+    frameRate: 10
   })
 
-  const keysPressed = useRef({})
-  const animationFrameId = useRef(null)
+  const keysPressed = useRef<Record<string, boolean>>({})
+  const animationFrameId = useRef<number | null>(null)
   const spritesRef = useRef(playerSprites())
-  const imagesRef = useRef({})
 
-  const canvas:HTMLCanvasElement = canvasRef.current
-  const ctx:CanvasRenderingContext2D = canvas ? canvas.getContext('2d') : undefined
+  const images = useImages({ spriteReference: spritesRef })
 
-  /**
-   *
-   * @param src
-   * @returns
-   */
-  const loadImage = (src: string) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => resolve(img)
-      img.onerror = reject
-      img.src = src
-    })
-  }
-
-  /**
-   *
-   */
-  const loadAllImages = async () => {
-    try {
-      for (const [key, value] of Object.entries(spritesRef.current)) {
-        imagesRef.current[key] = await Promise.all(value.sprites.map(loadImage))
-      }
-      setImagesLoaded(true)
-    } catch (error) {
-      console.error('Failed to load one or more images', error)
-    }
-  }
-
-  /**
-   *
-   * @param e
-   */
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     keysPressed.current[e.key] = true
   }
 
-  /**
-   *
-   * @param e
-   */
-  const handleKeyUp = (e) => {
+  const handleKeyUp = (e: KeyboardEvent) => {
     keysPressed.current[e.key] = false
   }
 
@@ -72,7 +36,7 @@ const Game = () => {
    *
    */
   const updateGame = () => {
-    setPlayerState(prev => {
+    setPlayerState((prev) => {
       const newState = { ...prev }
       let action = 'idle'
       let direction = prev.direction
@@ -90,7 +54,12 @@ const Game = () => {
       const currentAction = `${action}${direction.charAt(0).toUpperCase() + direction.slice(1)}`
       const spriteInfo = spritesRef.current[currentAction]
 
-      newState.frameCount = (prev.frameCount + 1) % spriteInfo.frameRate
+      if (!spriteInfo) {
+        return prev
+      }
+
+      newState.frameRate = spriteInfo.frameRate
+      newState.frameCount = (prev.frameCount + 1) % newState.frameRate
       if (newState.frameCount === 0 || action !== prev.action || direction !== prev.direction) {
         if (spriteInfo.order) {
           const orderIndex = (prev.currentFrame + 1) % spriteInfo.order.length
@@ -109,29 +78,24 @@ const Game = () => {
     animationFrameId.current = requestAnimationFrame(updateGame)
   }
 
-  /**
-   *
-   */
-  const drawBackground = () => {
+  const drawBackground = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     ctx.fillStyle = BG
     ctx.fillRect(0, 0, canvas.width, canvas.height)
   }
 
-  /**
-   *
-   */
-  const drawPlayer = () => {
-    const currentAction = `${playerState.action}${playerState.direction.charAt(0).toUpperCase() + playerState.direction.slice(1)}`
+  const drawPlayer = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+    const { action, direction, currentFrame, x, y } = playerState
+    const currentAction = `${action}${direction.charAt(0).toUpperCase() + direction.slice(1)}`
     const spriteInfo = spritesRef.current[currentAction]
-    const currentImage = imagesRef.current[currentAction][playerState.currentFrame]
+    const currentImage = images?.imagesRef?.current[currentAction][currentFrame]
 
     if (currentImage) {
       ctx.save()
       if (spriteInfo.flipHorizontal) {
         ctx.scale(-1, 1)
-        ctx.translate(-playerState.x - currentImage.width, playerState.y)
+        ctx.translate(-x - currentImage.width, y)
       } else {
-        ctx.translate(playerState.x, playerState.y)
+        ctx.translate(x, y)
       }
       ctx.drawImage(currentImage, 0, canvas.height / 2)
       ctx.restore()
@@ -139,18 +103,22 @@ const Game = () => {
   }
 
   /**
-   * Render en canvas por orden
+   * Renderiza los elementos en el canvas. IMPORTANTE: Lo que se renderiza más tarde se superpone a lo que se renderiza primero
    */
   const render = () => {
-    drawBackground()
-    drawPlayer()
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    drawBackground(ctx, canvas)
+    drawPlayer(ctx, canvas)
   }
 
   /**
-   * Cargar imagenes & listeners
+   * Activa la carga de imagenes y los listeners.
    */
   useEffect(() => {
-    loadAllImages()
+    // loadAllImages()
 
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
@@ -160,17 +128,18 @@ const Game = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
-      cancelAnimationFrame(animationFrameId.current)
+      if (animationFrameId.current !== null) {
+        cancelAnimationFrame(animationFrameId.current)
+      }
     }
   }, [])
 
   /**
-   * Llamar a renderizar en canvas si cambia el jugador
+   * Activa el renderizado cuando las imagenes están cargadas o cambia algo en el jugador
    */
   useEffect(() => {
-    if (!imagesLoaded) return
-    render()
-  }, [playerState])
+    if (images.imagesLoaded) render()
+  }, [playerState, images.imagesLoaded])
 
   return <canvas ref={canvasRef} width={800} height={600} />
 }
