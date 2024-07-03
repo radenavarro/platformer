@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { playerSprites } from '../constants/player'
 import { useImages } from '../hooks/useImages'
 
@@ -7,7 +7,6 @@ const BG = '#88bef5'
 
 const Game = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  // const [imagesLoaded, setImagesLoaded] = useState(false)
   const [playerState, setPlayerState] = useState({
     x: 0,
     y: 0,
@@ -19,34 +18,35 @@ const Game = () => {
   })
 
   const keysPressed = useRef<Record<string, boolean>>({})
+  const lastUpdateTimeRef = useRef<number>(performance.now())
   const animationFrameId = useRef<number | null>(null)
   const spritesRef = useRef(playerSprites())
 
-  const images = useImages({ spriteReference: spritesRef })
+  const { imagesRef, imagesLoaded } = useImages({ spriteReference: spritesRef })
 
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
     keysPressed.current[e.key] = true
-  }
+  }, [])
 
-  const handleKeyUp = (e: KeyboardEvent) => {
+  const handleKeyUp = useCallback((e: KeyboardEvent) => {
     keysPressed.current[e.key] = false
-  }
+  }, [])
 
-  /**
-   *
-   */
-  const updateGame = () => {
+  const updateGame = useCallback((timestamp: number) => {
+    const deltaTime = timestamp - lastUpdateTimeRef.current
+    lastUpdateTimeRef.current = timestamp
+
     setPlayerState((prev) => {
       const newState = { ...prev }
       let action = 'idle'
       let direction = prev.direction
 
       if (keysPressed.current.a) {
-        newState.x -= SPEED
+        newState.x -= SPEED * (deltaTime / 16.67)
         action = 'move'
         direction = 'left'
       } else if (keysPressed.current.d) {
-        newState.x += SPEED
+        newState.x += SPEED * (deltaTime / 16.67)
         action = 'move'
         direction = 'right'
       }
@@ -76,18 +76,18 @@ const Game = () => {
     })
 
     animationFrameId.current = requestAnimationFrame(updateGame)
-  }
+  }, [])
 
-  const drawBackground = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+  const drawBackground = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     ctx.fillStyle = BG
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-  }
+  }, [])
 
-  const drawPlayer = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+  const drawPlayer = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     const { action, direction, currentFrame, x, y } = playerState
     const currentAction = `${action}${direction.charAt(0).toUpperCase() + direction.slice(1)}`
     const spriteInfo = spritesRef.current[currentAction]
-    const currentImage = images?.imagesRef?.current[currentAction][currentFrame]
+    const currentImage = imagesRef.current[currentAction][currentFrame]
 
     if (currentImage) {
       ctx.save()
@@ -100,30 +100,26 @@ const Game = () => {
       ctx.drawImage(currentImage, 0, canvas.height / 2)
       ctx.restore()
     }
-  }
+  }, [playerState, imagesRef])
 
-  /**
-   * Renderiza los elementos en el canvas. IMPORTANTE: Lo que se renderiza más tarde se superpone a lo que se renderiza primero
-   */
-  const render = () => {
+  const render = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     drawBackground(ctx, canvas)
     drawPlayer(ctx, canvas)
-  }
+  }, [drawBackground, drawPlayer])
 
   /**
    * Activa la carga de imagenes y los listeners.
    */
   useEffect(() => {
-    // loadAllImages()
-
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
 
-    updateGame()
+    lastUpdateTimeRef.current = performance.now()
+    animationFrameId.current = requestAnimationFrame(updateGame)
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
@@ -132,14 +128,14 @@ const Game = () => {
         cancelAnimationFrame(animationFrameId.current)
       }
     }
-  }, [])
+  }, [handleKeyDown, handleKeyUp, updateGame])
 
   /**
    * Activa el renderizado cuando las imagenes están cargadas o cambia algo en el jugador
    */
   useEffect(() => {
-    if (images.imagesLoaded) render()
-  }, [playerState, images.imagesLoaded])
+    if (imagesLoaded) render()
+  }, [playerState, imagesLoaded, render])
 
   return <canvas ref={canvasRef} width={800} height={600} />
 }
