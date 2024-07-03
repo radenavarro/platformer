@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { playerSprites } from '../constants/player'
 import { useImages } from '../hooks/useImages'
 import { Player } from '../core/player'
+import { useGameLoop } from '../hooks/useGameLoop'
 
 const BG = '#88bef5'
 
@@ -23,7 +24,8 @@ const Game = () => {
   const lastUpdateTimeRef = useRef<number>(performance.now())
   const animationFrameId = useRef<number | null>(null)
   const spritesRef = useRef(playerSprites())
-  const player = new Player(5, -10)
+
+  const player = useRef(new Player(10, -14)).current
 
   const { imagesRef, imagesLoaded } = useImages({ spriteReference: spritesRef })
 
@@ -35,68 +37,41 @@ const Game = () => {
     keysPressed.current[e.key] = false
   }, [])
 
-  const updateGame = useCallback((timestamp: number) => {
-    const deltaTime = timestamp - lastUpdateTimeRef.current
-    lastUpdateTimeRef.current = timestamp
+  const updateGame = useCallback((deltaTime: number) => {
+    player.update(deltaTime, keysPressed.current)
+
     setPlayerState((prev) => {
-      const newState = { ...prev }
-      let action = 'idle'
-      let direction = prev.direction
+      const { x, y } = player.getPosition()
+      const action = player.getAction()
 
-      if (keysPressed.current.a) {
-        newState.x -= player.getSpeed() * (deltaTime / 16.67)
-        action = 'move'
-        direction = 'left'
-      } else if (keysPressed.current.d) {
-        newState.x += player.getSpeed() * (deltaTime / 16.67)
-        action = 'move'
-        direction = 'right'
+      const newState = {
+        ...prev,
+        x,
+        y,
+        action,
+        direction: keysPressed.current.a ? 'left' : (keysPressed.current.d ? 'right' : prev.direction)
       }
 
-      // Salto: impulso inicial
-      if (keysPressed.current.w && !prev.isJumping) {
-        newState.velocityY = player.getJumpHeight()
-        newState.isJumping = true
-        action = 'jump'
-      }
-
-      // Gravedad
-      newState.velocityY += 0.5 * (deltaTime / 16.67)
-      newState.y += newState.velocityY * (deltaTime / 16.67)
-
-      // Detectar cuando el jugador toca el suelo
-      if (newState.y > 0) { // 0 = nivel de suelo
-        newState.y = 0
-        newState.velocityY = 0
-        newState.isJumping = false
-      }
-
-      const currentAction = `${action}${direction.charAt(0).toUpperCase() + direction.slice(1)}`
+      // Actualizar sprite
+      const currentAction = `${action}${newState.direction.charAt(0).toUpperCase() + newState.direction.slice(1)}`
       const spriteInfo = spritesRef.current[currentAction]
 
-      if (!spriteInfo) {
-        return newState
-      }
-
-      newState.frameRate = spriteInfo.frameRate
-      newState.frameCount = (prev.frameCount + 1) % newState.frameRate
-      if (newState.frameCount === 0 || action !== prev.action || direction !== prev.direction) {
-        if (spriteInfo.order) {
-          const orderIndex = (prev.currentFrame + 1) % spriteInfo.order.length
-          newState.currentFrame = spriteInfo.order[orderIndex] - 1
-        } else {
-          newState.currentFrame = (prev.currentFrame + 1) % spriteInfo.sprites.length
+      if (spriteInfo) {
+        newState.frameRate = spriteInfo.frameRate
+        newState.frameCount = (prev.frameCount + 1) % newState.frameRate
+        if (newState.frameCount === 0 || action !== prev.action || newState.direction !== prev.direction) {
+          if (spriteInfo.order) {
+            const orderIndex = (prev.currentFrame + 1) % spriteInfo.order.length
+            newState.currentFrame = spriteInfo.order[orderIndex] - 1
+          } else {
+            newState.currentFrame = (prev.currentFrame + 1) % spriteInfo.sprites.length
+          }
         }
       }
 
-      newState.action = action
-      newState.direction = direction
-
       return newState
     })
-
-    animationFrameId.current = requestAnimationFrame(updateGame)
-  }, [])
+  }, [player])
 
   const drawBackground = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     ctx.fillStyle = BG
@@ -106,6 +81,7 @@ const Game = () => {
   const drawPlayer = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     const { action, direction, currentFrame, x, y } = playerState
     const currentAction = `${action}${direction.charAt(0).toUpperCase() + direction.slice(1)}`
+
     const spriteInfo = spritesRef.current[currentAction]
     const currentImage = imagesRef.current[currentAction][currentFrame]
 
@@ -131,6 +107,8 @@ const Game = () => {
     drawPlayer(ctx, canvas)
   }, [drawBackground, drawPlayer])
 
+  useGameLoop(updateGame, render, true, imagesLoaded)
+
   /**
    * Activa la carga de imagenes y los listeners.
    */
@@ -153,9 +131,9 @@ const Game = () => {
   /**
    * Activa el renderizado cuando las imagenes están cargadas o cambia algo en el jugador
    */
-  useEffect(() => {
-    if (imagesLoaded) render()
-  }, [playerState, imagesLoaded, render])
+  // useEffect(() => {
+  //   if (imagesLoaded) render()
+  // }, [playerState, imagesLoaded, render])
 
   return <canvas ref={canvasRef} width={800} height={600} />
 }

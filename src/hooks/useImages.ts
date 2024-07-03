@@ -28,6 +28,7 @@ export const useImages = ({ spriteReference }) => {
       imagesRef.current = loadedImages
       setImagesLoaded(true)
     } catch (error) {
+      console.log(error)
       console.error('Failed to load one or more images', error)
     }
   }

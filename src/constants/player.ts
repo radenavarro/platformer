@@ -36,6 +36,28 @@ export const playerSprites = Object.freeze(() => {
       flipHorizontal: true,
       loop: true,
       frameRate: 10
+    },
+    jumpRight: {
+      sprites: [
+        run1Sprite,
+        run2Sprite,
+        run3Sprite
+      ],
+      order: [1, 2, 1, 3],
+      flipHorizontal: false,
+      loop: true,
+      frameRate: 10
+    },
+    jumpLeft: {
+      sprites: [
+        run1Sprite,
+        run2Sprite,
+        run3Sprite
+      ],
+      order: [1, 2, 1, 3],
+      flipHorizontal: true,
+      loop: true,
+      frameRate: 10
     }
   }
 })
