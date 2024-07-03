@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { playerSprites } from '../constants/player'
 import { useImages } from '../hooks/useImages'
+import { Player } from '../core/player'
 
-const SPEED = 5
 const BG = '#88bef5'
 
 const Game = () => {
@@ -14,13 +14,16 @@ const Game = () => {
     action: 'idle',
     currentFrame: 0,
     frameCount: 0,
-    frameRate: 10
+    frameRate: 10,
+    isJumping: false,
+    velocityY: 0
   })
 
   const keysPressed = useRef<Record<string, boolean>>({})
   const lastUpdateTimeRef = useRef<number>(performance.now())
   const animationFrameId = useRef<number | null>(null)
   const spritesRef = useRef(playerSprites())
+  const player = new Player(5, -10)
 
   const { imagesRef, imagesLoaded } = useImages({ spriteReference: spritesRef })
 
@@ -35,27 +38,44 @@ const Game = () => {
   const updateGame = useCallback((timestamp: number) => {
     const deltaTime = timestamp - lastUpdateTimeRef.current
     lastUpdateTimeRef.current = timestamp
-
     setPlayerState((prev) => {
       const newState = { ...prev }
       let action = 'idle'
       let direction = prev.direction
 
       if (keysPressed.current.a) {
-        newState.x -= SPEED * (deltaTime / 16.67)
+        newState.x -= player.getSpeed() * (deltaTime / 16.67)
         action = 'move'
         direction = 'left'
       } else if (keysPressed.current.d) {
-        newState.x += SPEED * (deltaTime / 16.67)
+        newState.x += player.getSpeed() * (deltaTime / 16.67)
         action = 'move'
         direction = 'right'
+      }
+
+      // Salto: impulso inicial
+      if (keysPressed.current.w && !prev.isJumping) {
+        newState.velocityY = player.getJumpHeight()
+        newState.isJumping = true
+        action = 'jump'
+      }
+
+      // Gravedad
+      newState.velocityY += 0.5 * (deltaTime / 16.67)
+      newState.y += newState.velocityY * (deltaTime / 16.67)
+
+      // Detectar cuando el jugador toca el suelo
+      if (newState.y > 0) { // 0 = nivel de suelo
+        newState.y = 0
+        newState.velocityY = 0
+        newState.isJumping = false
       }
 
       const currentAction = `${action}${direction.charAt(0).toUpperCase() + direction.slice(1)}`
       const spriteInfo = spritesRef.current[currentAction]
 
       if (!spriteInfo) {
-        return prev
+        return newState
       }
 
       newState.frameRate = spriteInfo.frameRate
