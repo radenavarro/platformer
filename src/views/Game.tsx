@@ -1,14 +1,16 @@
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { playerSprites } from '../constants/player'
 import { useImages } from '../hooks/useImages'
 import { Player } from '../core/player'
 import { useGameLoop } from '../hooks/useGameLoop'
+import { GameState } from '../core/types'
+import { useElementBounds } from '../hooks/useElementBounds'
 
 const BG = '#88bef5'
 
 const Game = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [playerState, setPlayerState] = useState({
+  const [playerState, setPlayerState] = useState<GameState>({
     x: 0,
     y: 0,
     direction: 'right',
@@ -37,6 +39,8 @@ const Game = () => {
     keysPressed.current[e.key] = false
   }, [])
 
+  const canvasCoords = useElementBounds(canvasRef)
+
   const updateGame = useCallback((deltaTime: number) => {
     player.update(deltaTime, keysPressed.current)
 
@@ -44,7 +48,7 @@ const Game = () => {
       const { x, y } = player.getPosition()
       const action = player.getAction()
 
-      const newState = {
+      const newState:GameState = {
         ...prev,
         x,
         y,
