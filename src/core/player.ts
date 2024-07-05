@@ -58,7 +58,7 @@ export class Player implements PlayerInterface {
     }
 
     // Gravedad
-    this.velocityY += 0.98 * (deltaTime / 16.67)
+    this.velocityY += 0.98
     this.y += this.velocityY
 
     // Detectar cuando el jugador toca el suelo
