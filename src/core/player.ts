@@ -16,11 +16,13 @@ export class Player implements PlayerInterface {
   private jumpVelocity: number // unidades por segundo (negativo porque va hacia arriba)
   private isJumping: boolean = false
   private action: Action
+  private mass: number
 
   constructor (
     x:number = 0,
     y:number = 0,
     speed:number = 10,
+    mass:number = 70,
     jumpVelocity:number = -14,
     isJumping:boolean = false,
     action:Action = 'idle'
@@ -31,6 +33,7 @@ export class Player implements PlayerInterface {
     this.jumpVelocity = jumpVelocity
     this.isJumping = isJumping
     this.action = action
+    this.mass = mass
   }
 
   public getSpeed () {
@@ -58,7 +61,7 @@ export class Player implements PlayerInterface {
     }
 
     // Gravedad
-    this.velocityY += 0.98
+    this.velocityY += (9.8 * Math.abs(this.mass)) / 1000
     this.y += this.velocityY
 
     // Detectar cuando el jugador toca el suelo

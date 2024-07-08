@@ -27,7 +27,7 @@ const Game = () => {
   const animationFrameId = useRef<number | null>(null)
   const spritesRef = useRef(playerSprites())
 
-  const player = useRef(new Player(0, 0, 10, -20)).current
+  const player = useRef(new Player(0, 0, 10, 65, -15)).current
 
   const { imagesRef, imagesLoaded } = useImages({ spriteReference: spritesRef })
 
