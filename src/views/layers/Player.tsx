@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { canvas } from '../../constants/canvas'
 import { GameState } from '../../core/types'
 import { Player as PlayerEntity } from '../../core/player'
-import { useImages } from '../../hooks/useImages'
-import { playerSprites } from '../../constants/player'
+import { useSprites } from '../../hooks/useSprites'
+import { playerProps, playerSprites } from '../../constants/player'
 import { useGameLoop } from '../../hooks/useGameLoop'
 
 export const PlayerLayer = () => {
@@ -23,10 +23,8 @@ export const PlayerLayer = () => {
   const lastUpdateTimeRef = useRef<number>(performance.now())
   const animationFrameId = useRef<number | null>(null)
   const spritesRef = useRef(playerSprites())
-  const { imagesRef, imagesLoaded } = useImages({ spriteReference: spritesRef })
+  const { imagesRef, imagesLoaded } = useSprites({ spriteReference: spritesRef })
   const player = useRef(new PlayerEntity(0, 0, 10, 65, -15)).current
-
-  const canvasDimensions = canvas()
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     keysPressed.current[e.key] = true
@@ -81,14 +79,15 @@ export const PlayerLayer = () => {
 
     if (currentImage) {
       ctx.save()
-      ctx.clearRect(0, 0, canvasDimensions.width, canvasDimensions.height)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
       if (spriteInfo.flipHorizontal) {
         ctx.scale(-1, 1)
         ctx.translate(-x - currentImage.width, y)
       } else {
         ctx.translate(x, y)
       }
-      ctx.drawImage(currentImage, 0, canvas.height / 2)
+      // ctx.drawImage(currentImage, 0, canvas.height / 2)
+      ctx.drawImage(currentImage, 0, playerProps.spawn.y)
       ctx.restore()
     }
   }, [playerState, imagesRef])
@@ -124,6 +123,6 @@ export const PlayerLayer = () => {
   }, [handleKeyDown, handleKeyUp, updateGame])
 
   return (
-    <canvas ref={canvasRef} width={canvas().width} height={canvas().height} style={{ zIndex: 10, position: 'absolute' }} />
+    <canvas ref={canvasRef} width={canvas.width} height={canvas.height} style={{ zIndex: 10, position: 'absolute' }} />
   )
 }

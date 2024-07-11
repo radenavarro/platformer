@@ -12,3 +12,10 @@ export type GameState = {
     isJumping?: boolean,
     velocityY?: number
 }
+
+export type SectorInfo = {
+    x: number,
+    y: number,
+    width: number,
+    height: number
+}

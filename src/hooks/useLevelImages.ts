@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 
-export const useImages = ({ spriteReference }) => {
+export const useLevelImages = ({ levelMap }) => {
   const imagesRef = useRef<Record<string, HTMLImageElement[]>>({})
   const [imagesLoaded, setImagesLoaded] = useState(false)
 
   useEffect(() => {
-    if (spriteReference) {
-      loadAllImages(spriteReference)
+    if (levelMap) {
+      loadAllImages(levelMap)
     }
-  }, [spriteReference])
+  }, [levelMap])
 
   const loadImage = (src: string): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
@@ -19,11 +19,16 @@ export const useImages = ({ spriteReference }) => {
     })
   }
 
-  const loadAllImages = async (spriteRef) => {
+  const loadAllImages = async (lvlmap) => {
     try {
+      // console.log(lvlmap)
       const loadedImages: Record<string, HTMLImageElement[]> = {}
-      for (const [key, value] of Object.entries(spriteRef.current)) {
-        loadedImages[key] = await Promise.all(value.sprites.map(loadImage))
+      for (const [key, value] of Object.entries(lvlmap)) {
+        for (const [subkey, subvalue] of Object.entries(value)) {
+          if (subkey === 'src') {
+            loadedImages[key] = await Promise.resolve(loadImage(subvalue))
+          }
+        }
       }
       imagesRef.current = loadedImages
       setImagesLoaded(true)

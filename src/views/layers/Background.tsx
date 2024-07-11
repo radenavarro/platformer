@@ -24,6 +24,6 @@ export const Background = () => {
   useGameLoop(() => {}, render, true, true)
 
   return (
-    <canvas ref={canvasRef} width={canvas().width} height={canvas().height} style={{ position: 'absolute' }} />
+    <canvas ref={canvasRef} width={canvas.width} height={canvas.height} style={{ position: 'absolute' }} />
   )
 }
