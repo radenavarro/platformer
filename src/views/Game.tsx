@@ -9,6 +9,7 @@ const Game = () => {
     <main
       className='canvasContainer'
       style={{ width: canvas.width, height: canvas.height }}
+      data-testid='gameWrapper'
     >
       <Background />
       <PlayerLayer />
