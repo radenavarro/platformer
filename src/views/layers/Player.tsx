@@ -43,7 +43,7 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
     keysPressed.current[e.key] = false
   }, [])
 
-  const updateGame = useCallback((deltaTime: number) => {
+  const updateGame = (deltaTime: number) => {
     // console.log(scrollX)
     player.update(
       deltaTime,
@@ -51,7 +51,7 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
       // { scrollX, scrollY },
       tileData
     )
-    console.log(tileData.playerInTile)
+
     const { x, y } = player.getPosition()
     const action = player.getAction()
 
@@ -87,12 +87,7 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
 
       return newState
     })
-  }, [
-    player,
-    tileData
-    // scrollX,
-    // scrollY
-  ])
+  }
 
   const drawPlayer = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     const { action, direction, currentFrame, x, y } = playerState

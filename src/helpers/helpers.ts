@@ -15,21 +15,17 @@ export function throttle (mainFunction: (...params:any[]) => void, delay: number
 
 export function playerInLeftEdge (tileData:MapProgressOutput):boolean {
   const { playerInTile } = tileData
-  console.log(playerInTile.x + ' < 10')
   if (playerInTile.x < 10) return true
   return false
 }
 
 export function playerInRightEdge (tileData:MapProgressOutput):boolean {
   const { playerInTile, totalTileWidth } = tileData
-
   if (playerInTile?.x > (totalTileWidth - 10)) return true
-
   return false
 }
 
 export function playerInAnyBoundary (tileData:MapProgressOutput):boolean {
-  console.log(tileData)
   if (playerInRightEdge(tileData) || playerInLeftEdge(tileData)) return true
   return false
 }

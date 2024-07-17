@@ -59,7 +59,7 @@ export class Player implements PlayerInterface {
         // scrollData.scrollX === 0 ||
         playerInAnyBoundary(tileData) ||
         playerInLeftEdge({ ...tileData, playerInTile: { ...tileData.playerInTile, x: tileData.playerInTile.x - 1 } })
-      ) this.x -= this.speed * (deltaTime / 16.67)
+      ) this.x -= (this.speed * (deltaTime / 16.67))
       this.action = 'move'
     } else if (keys.d) {
       // console.log(scrollData.scrollX)
@@ -67,10 +67,9 @@ export class Player implements PlayerInterface {
         // scrollData.scrollX === 0 ||
         playerInAnyBoundary(tileData) ||
         playerInRightEdge({ ...tileData, playerInTile: { ...tileData.playerInTile, x: tileData.playerInTile.x + 1 } })
-      ) this.x += this.speed * (deltaTime / 16.67)
+      ) this.x += (this.speed * (deltaTime / 16.67))
       this.action = 'move'
     }
-
     // Salto: impulso inicial
     if (keys.w && !this.isJumping) {
       this.velocityY = this.getJumpHeight()
