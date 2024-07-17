@@ -3,19 +3,38 @@ import { canvas } from '../../../constants/canvas'
 import { level } from '../../../constants/level'
 import { useLevelImages } from '../../../hooks/useLevelImages'
 import { levelLayout } from './layout/map01'
+import { useGameStore } from '../../../zustand/store'
 
-export const Map01 = () => {
+export const Map01 = ({ camera }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const tilesRef = useRef(level.map01.tiles)
   const { imagesRef, imagesLoaded } = useLevelImages({ levelMap: level.map01.tiles })
+
+  const { playerScrollX, playerScrollY } = useGameStore().player
 
   useEffect(() => {
     console.log(imagesRef)
     if (imagesLoaded) createLayout()
   }, [imagesLoaded])
 
+  // useEffect(() => {
+  //   scroll()
+  // }, [playerScrollX, playerScrollY])
+
+  function scroll () {
+    const ctx = canvasRef.current?.getContext('2d')
+    // shiftCanvas(ctx, level.map01.width, level.map01.height, -playerScrollX, -playerScrollY)
+  }
+  function shiftCanvas (ctx, w, h, dx, dy) {
+    ctx.save()
+    const imageData = ctx.getImageData(0, 0, w, h)
+    ctx.clearRect(0, 0, w, h)
+    ctx.putImageData(imageData, dx, dy)
+    ctx.restore()
+  }
+
   function createLayout () {
-    const { height, width } = level.map01
+    const { width, height } = level.map01
     const ctx = canvasRef.current?.getContext('2d')
 
     let pointerX = 0
@@ -24,7 +43,7 @@ export const Map01 = () => {
     const groundLevel = level.map01.groundLevel
 
     if (ctx) {
-      console.log('width: ' + width)
+      // console.log('width: ' + width)
       for (const line of levelLayout) {
         for (const tile of line) {
           console.log('x: ' + pointerX)
@@ -63,6 +82,16 @@ export const Map01 = () => {
   }
 
   return (
-    <canvas ref={canvasRef} width={canvas.width} height={canvas.height} style={{ position: 'absolute' }} />
+    <canvas
+      ref={canvasRef}
+      width={level.map01.width}
+      height={level.map01.height}
+      style={{
+        position: 'absolute'
+        // width: canvas.width,
+        // height: canvas.height,
+        // overflow: 'hidden'
+      }}
+    />
   )
 }

@@ -4,7 +4,7 @@ import run2Sprite from '../assets/pj/run2.png'
 import run3Sprite from '../assets/pj/run3.png'
 import { canvas } from './canvas'
 
-export const playerSprites = Object.freeze(() => {
+export const playerSprites = (Object.freeze(() => {
   return {
     idleRight: {
       sprites: [idleSprite],
@@ -61,7 +61,7 @@ export const playerSprites = Object.freeze(() => {
       frameRate: 10
     }
   }
-})
+}))()
 
 export const playerProps = (Object.freeze(() => {
   return {

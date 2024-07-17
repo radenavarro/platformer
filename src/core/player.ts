@@ -1,3 +1,5 @@
+import { playerInAnyBoundary, playerInLeftEdge, playerInRightEdge } from '../helpers/helpers'
+import { MapProgressOutput } from '../hooks/hookTypes'
 import { Action } from './types'
 
 interface PlayerInterface {
@@ -44,13 +46,28 @@ export class Player implements PlayerInterface {
     return this.jumpVelocity
   }
 
-  update (deltaTime: number, keys: { a: boolean; d: boolean; w: boolean }) {
+  update (
+    deltaTime: number,
+    keys: { a: boolean; d: boolean; w: boolean },
+    // scrollData:{scrollX:number, scrollY:number},
+    tileData: MapProgressOutput
+  ) {
     // Movimiento horizontal
     if (keys.a) {
-      this.x -= this.speed * (deltaTime / 16.67)
+      // console.log(scrollData.scrollX)
+      if (
+        // scrollData.scrollX === 0 ||
+        playerInAnyBoundary(tileData) ||
+        playerInLeftEdge({ ...tileData, playerInTile: { ...tileData.playerInTile, x: tileData.playerInTile.x - 1 } })
+      ) this.x -= this.speed * (deltaTime / 16.67)
       this.action = 'move'
     } else if (keys.d) {
-      this.x += this.speed * (deltaTime / 16.67)
+      // console.log(scrollData.scrollX)
+      if (
+        // scrollData.scrollX === 0 ||
+        playerInAnyBoundary(tileData) ||
+        playerInRightEdge({ ...tileData, playerInTile: { ...tileData.playerInTile, x: tileData.playerInTile.x + 1 } })
+      ) this.x += this.speed * (deltaTime / 16.67)
       this.action = 'move'
     }
 

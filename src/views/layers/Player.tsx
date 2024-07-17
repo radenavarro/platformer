@@ -5,8 +5,12 @@ import { Player as PlayerEntity } from '../../core/player'
 import { useSprites } from '../../hooks/useSprites'
 import { playerProps, playerSprites } from '../../constants/player'
 import { useGameLoop } from '../../hooks/useGameLoop'
+import { usePlayerScroll } from '../../hooks/usePlayerScroll'
+import { useGameStore } from '../../zustand/store'
+import { Camera, MapProgressOutput } from '../../hooks/hookTypes'
+import { playerInLeftEdge, playerInRightEdge } from '../../helpers/helpers'
 
-export const PlayerLayer = () => {
+export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: MapProgressOutput }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [playerState, setPlayerState] = useState<GameState>({
     x: 0,
@@ -22,9 +26,14 @@ export const PlayerLayer = () => {
   const keysPressed = useRef<Record<string, boolean>>({})
   const lastUpdateTimeRef = useRef<number>(performance.now())
   const animationFrameId = useRef<number | null>(null)
-  const spritesRef = useRef(playerSprites())
+  const spritesRef = useRef(playerSprites)
   const { imagesRef, imagesLoaded } = useSprites({ spriteReference: spritesRef })
-  const player = useRef(new PlayerEntity(0, 0, 10, 65, -15)).current
+  const player = useRef(new PlayerEntity(0, 0, 10, 25, -10)).current
+
+  // Zustand
+  const { playerX, playerY, setPlayerX, setPlayerY } = useGameStore().player
+
+  // const { scrollX, scrollY } = usePlayerScroll(playerState, player, tileData)
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     keysPressed.current[e.key] = true
@@ -35,12 +44,22 @@ export const PlayerLayer = () => {
   }, [])
 
   const updateGame = useCallback((deltaTime: number) => {
-    player.update(deltaTime, keysPressed.current)
+    // console.log(scrollX)
+    player.update(
+      deltaTime,
+      keysPressed.current,
+      // { scrollX, scrollY },
+      tileData
+    )
+    console.log(tileData.playerInTile)
+    const { x, y } = player.getPosition()
+    const action = player.getAction()
 
+    // Actualizar coords player Zustand
+    setPlayerX(x)
+    setPlayerY(y)
+    // Actualizar estado player en componente
     setPlayerState((prev) => {
-      const { x, y } = player.getPosition()
-      const action = player.getAction()
-
       const newState:GameState = {
         ...prev,
         x,
@@ -68,7 +87,12 @@ export const PlayerLayer = () => {
 
       return newState
     })
-  }, [player])
+  }, [
+    player,
+    tileData
+    // scrollX,
+    // scrollY
+  ])
 
   const drawPlayer = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     const { action, direction, currentFrame, x, y } = playerState
@@ -80,24 +104,37 @@ export const PlayerLayer = () => {
     if (currentImage) {
       ctx.save()
       ctx.clearRect(0, 0, canvas.width, canvas.height)
+      const drawX = x
+      const drawY = y
+
+      // Ajustar la posición de dibujo basada en el scroll
+      // if (scrollX !== 0) {
+      //   if ((direction === 'left' && !playerInLeftEdge(tileData)) || (direction === 'right' && !playerInRightEdge(tileData))) {
+      //     drawX = scrollX
+      //   }
+      // }
+      // if (scrollY !== 0) {
+      //   drawY = scrollY
+      // }
+
+      // console.log(drawX)
+
       if (spriteInfo.flipHorizontal) {
         ctx.scale(-1, 1)
-        ctx.translate(-x - currentImage.width, y)
+        ctx.translate(-drawX - currentImage.width, drawY)
       } else {
-        ctx.translate(x, y)
+        ctx.translate(drawX, drawY)
       }
-      // ctx.drawImage(currentImage, 0, canvas.height / 2)
       ctx.drawImage(currentImage, 0, playerProps.spawn.y)
       ctx.restore()
     }
-  }, [playerState, imagesRef])
+  }, [playerState, imagesRef, scrollX, scrollY])
 
   const render = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    // drawBackground(ctx, canvas)
     drawPlayer(ctx, canvas)
   }, [drawPlayer])
 
