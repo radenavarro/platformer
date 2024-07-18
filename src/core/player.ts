@@ -1,11 +1,11 @@
-import { playerInAnyBoundary, playerInLeftEdge, playerInRightEdge } from '../helpers/helpers'
+import { playerInAnyBoundary } from '../helpers/helpers'
 import { MapProgressOutput } from '../hooks/hookTypes'
 import { Action } from './types'
 
 interface PlayerInterface {
     getSpeed: () => number,
     getJumpHeight: () => number,
-    update: (deltaTime:number, keys:{ a: boolean; d: boolean; w: boolean }) => void,
+    update: (deltaTime:number, keys:{ a: boolean; d: boolean; w: boolean }, tileData: MapProgressOutput) => void
     getPosition: () => { x: number, y: number }
     getAction: () => Action
 }

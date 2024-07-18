@@ -5,10 +5,8 @@ import { Player as PlayerEntity } from '../../core/player'
 import { useSprites } from '../../hooks/useSprites'
 import { playerProps, playerSprites } from '../../constants/player'
 import { useGameLoop } from '../../hooks/useGameLoop'
-import { usePlayerScroll } from '../../hooks/usePlayerScroll'
 import { useGameStore } from '../../zustand/store'
 import { Camera, MapProgressOutput } from '../../hooks/hookTypes'
-import { playerInLeftEdge, playerInRightEdge } from '../../helpers/helpers'
 
 export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: MapProgressOutput }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
