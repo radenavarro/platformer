@@ -4,6 +4,8 @@ export type ActionDirection = 'idleLeft' | 'moveLeft' | 'jumpLeft' | 'fallLeft' 
 export type GameState = {
     x?: number,
     y?: number,
+    spriteX?: number,
+    spriteY?: number,
     direction?: Direction,
     action?: Action,
     currentFrame?: number,

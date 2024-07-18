@@ -53,6 +53,7 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
     )
 
     const { x, y } = player.getPosition()
+    const { spriteX, spriteY } = player.getSpritePosition()
     const action = player.getAction()
 
     // Actualizar coords player Zustand
@@ -64,6 +65,8 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
         ...prev,
         x,
         y,
+        spriteX,
+        spriteY,
         action,
         direction: keysPressed.current.a ? 'left' : (keysPressed.current.d ? 'right' : prev.direction)
       }
@@ -90,7 +93,7 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
   }
 
   const drawPlayer = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-    const { action, direction, currentFrame, x, y } = playerState
+    const { action, direction, currentFrame, x, y, spriteX, spriteY } = playerState
     const currentAction = `${action}${direction.charAt(0).toUpperCase() + direction.slice(1)}`
 
     const spriteInfo = spritesRef.current[currentAction]
@@ -99,8 +102,10 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
     if (currentImage) {
       ctx.save()
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      const drawX = x
-      const drawY = y
+      // const drawX = x
+      // const drawY = y
+      const drawX = spriteX
+      const drawY = spriteY
 
       // Ajustar la posición de dibujo basada en el scroll
       // if (scrollX !== 0) {
@@ -123,7 +128,13 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
       ctx.drawImage(currentImage, 0, playerProps.spawn.y)
       ctx.restore()
     }
-  }, [playerState, imagesRef, scrollX, scrollY])
+  },
+  [
+    playerState,
+    imagesRef
+    // scrollX,
+    // scrollY
+  ])
 
   const render = useCallback(() => {
     const canvas = canvasRef.current

@@ -29,3 +29,8 @@ export function playerInAnyBoundary (tileData:MapProgressOutput):boolean {
   if (playerInRightEdge(tileData) || playerInLeftEdge(tileData)) return true
   return false
 }
+
+export function somewhatEquals (value:number, equalValue:number, sensitivity:number) {
+  if (value <= equalValue + (sensitivity / 2) && value >= equalValue - (sensitivity / 2)) return true
+  return false
+}

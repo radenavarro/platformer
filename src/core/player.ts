@@ -13,6 +13,8 @@ interface PlayerInterface {
 export class Player implements PlayerInterface {
   private x: number = 0
   private y: number = 0
+  private spriteX: number = 0
+  private spriteY: number = 0
   private velocityY: number = 0
   private speed: number // unidades por segundo
   private jumpVelocity: number // unidades por segundo (negativo porque va hacia arriba)
@@ -27,10 +29,14 @@ export class Player implements PlayerInterface {
     mass:number = 70,
     jumpVelocity:number = -14,
     isJumping:boolean = false,
-    action:Action = 'idle'
+    action:Action = 'idle',
+    spriteX:number = 0,
+    spriteY:number = 0
   ) {
     this.x = x
     this.y = y
+    this.spriteX = spriteX
+    this.spriteY = spriteY
     this.speed = speed
     this.jumpVelocity = jumpVelocity
     this.isJumping = isJumping
@@ -49,25 +55,24 @@ export class Player implements PlayerInterface {
   update (
     deltaTime: number,
     keys: { a: boolean; d: boolean; w: boolean },
-    // scrollData:{scrollX:number, scrollY:number},
     tileData: MapProgressOutput
   ) {
     // Movimiento horizontal
     if (keys.a) {
-      // console.log(scrollData.scrollX)
-      if (
-        // scrollData.scrollX === 0 ||
-        playerInAnyBoundary(tileData) ||
-        playerInLeftEdge({ ...tileData, playerInTile: { ...tileData.playerInTile, x: tileData.playerInTile.x - 1 } })
-      ) this.x -= (this.speed * (deltaTime / 16.67))
+      this.x -= (this.speed * (deltaTime / 16.67))
+      if (playerInAnyBoundary(tileData)) {
+        if (this.spriteX !== this.x) this.spriteX = this.x // Añadido para conservar la consistencia entre sprites del jugador y la posición real del jugador, al ser entidades separadas para manejar el scroll
+        else this.spriteX -= (this.speed * (deltaTime / 16.67))
+      }
+
       this.action = 'move'
     } else if (keys.d) {
-      // console.log(scrollData.scrollX)
-      if (
-        // scrollData.scrollX === 0 ||
-        playerInAnyBoundary(tileData) ||
-        playerInRightEdge({ ...tileData, playerInTile: { ...tileData.playerInTile, x: tileData.playerInTile.x + 1 } })
-      ) this.x += (this.speed * (deltaTime / 16.67))
+      this.x += (this.speed * (deltaTime / 16.67))
+      if (playerInAnyBoundary(tileData)) {
+        if (this.spriteX !== this.x) this.spriteX = this.x // Añadido para conservar la consistencia entre sprites del jugador y la posición real del jugador, al ser entidades separadas para manejar el scroll
+        else this.spriteX += (this.speed * (deltaTime / 16.67))
+      }
+
       this.action = 'move'
     }
     // Salto: impulso inicial
@@ -79,13 +84,18 @@ export class Player implements PlayerInterface {
     // Gravedad
     this.velocityY += (9.8 * Math.abs(this.mass)) / 1000
     this.y += this.velocityY
+    this.spriteY += this.velocityY
 
     // Detectar cuando el jugador toca el suelo
     if (this.y > 0) { // 0 = nivel de suelo
       this.y = 0
+      this.spriteY = 0
       this.velocityY = 0
       this.isJumping = false
     }
+
+    console.log('x: ' + this.x)
+    console.log('spriteX: ' + this.spriteX)
 
     if (!Object.entries(keys)?.find((k) => !!k[1])) this.action = 'idle'
   }
@@ -98,5 +108,9 @@ export class Player implements PlayerInterface {
     if (this.isJumping) return 'jump'
     if (this.velocityY !== 0) return 'fall'
     return this.action
+  }
+
+  getSpritePosition () {
+    return { spriteX: this.spriteX, spriteY: this.spriteY }
   }
 }
