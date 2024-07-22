@@ -66,7 +66,7 @@ export const playerSprites = (Object.freeze(() => {
 export const playerProps = (Object.freeze(() => {
   return {
     spawn: {
-      x: 32,
+      x: 32 * 3,
       y: 32 * 10
     }
   }

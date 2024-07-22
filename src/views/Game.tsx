@@ -8,9 +8,8 @@ import { useMapProgress } from '../hooks/useMapProgress'
 import { level } from '../constants/level'
 
 const Game = () => {
-  const { camera } = useCamera()
-
   const { playerInTile, totalTileWidth, totalTileHeight } = useMapProgress({ map: level.map01 })
+  const { camera } = useCamera({ playerInTile, totalTileWidth, totalTileHeight })
   // console.log(camera)
   return (
     <main
@@ -20,7 +19,7 @@ const Game = () => {
     >
       <Background />
       <PlayerLayer camera={camera} tileData={{ playerInTile, totalTileWidth, totalTileHeight }} />
-      <Map01 camera={camera} />
+      <Map01 camera={camera} tileData={{ playerInTile, totalTileWidth, totalTileHeight }} />
     </main>
   )
 }

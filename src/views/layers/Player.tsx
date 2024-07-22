@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { canvas } from '../../constants/canvas'
-import { GameState } from '../../core/types'
+import { Action, Direction, GameState } from '../../core/types'
 import { Player as PlayerEntity } from '../../core/player'
 import { useSprites } from '../../hooks/useSprites'
 import { playerProps, playerSprites } from '../../constants/player'
 import { useGameLoop } from '../../hooks/useGameLoop'
 import { useGameStore } from '../../zustand/store'
 import { Camera, MapProgressOutput } from '../../hooks/hookTypes'
+import { playerInAnyBoundary, playerInLeftEdge } from '../../helpers/helpers'
+import { level } from '../../constants/level'
 
 export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: MapProgressOutput }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -26,12 +28,10 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
   const animationFrameId = useRef<number | null>(null)
   const spritesRef = useRef(playerSprites)
   const { imagesRef, imagesLoaded } = useSprites({ spriteReference: spritesRef })
-  const player = useRef(new PlayerEntity(0, 0, 10, 25, -10)).current
+  const player = useRef(new PlayerEntity(0, 0, 4, 55, -10)).current
 
   // Zustand
-  const { playerX, playerY, setPlayerX, setPlayerY } = useGameStore().player
-
-  // const { scrollX, scrollY } = usePlayerScroll(playerState, player, tileData)
+  const { setPlayerX, setPlayerY } = useGameStore().player
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     keysPressed.current[e.key] = true
@@ -42,11 +42,9 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
   }, [])
 
   const updateGame = (deltaTime: number) => {
-    // console.log(scrollX)
     player.update(
       deltaTime,
       keysPressed.current,
-      // { scrollX, scrollY },
       tileData
     )
 
@@ -91,7 +89,7 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
   }
 
   const drawPlayer = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-    const { action, direction, currentFrame, x, y, spriteX, spriteY } = playerState
+    const { action, direction, currentFrame, x, y }: GameState = playerState
     const currentAction = `${action}${direction.charAt(0).toUpperCase() + direction.slice(1)}`
 
     const spriteInfo = spritesRef.current[currentAction]
@@ -100,28 +98,15 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
     if (currentImage) {
       ctx.save()
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      // const drawX = x
-      // const drawY = y
-      const drawX = spriteX
-      const drawY = spriteY
 
-      // Ajustar la posición de dibujo basada en el scroll
-      // if (scrollX !== 0) {
-      //   if ((direction === 'left' && !playerInLeftEdge(tileData)) || (direction === 'right' && !playerInRightEdge(tileData))) {
-      //     drawX = scrollX
-      //   }
-      // }
-      // if (scrollY !== 0) {
-      //   drawY = scrollY
-      // }
-
-      // console.log(drawX)
+      const xWithCamera: number = playerInLeftEdge(tileData) ? x : x - camera.x
+      const yWithCamera: number = playerInLeftEdge(tileData) ? y : y - camera.y
 
       if (spriteInfo.flipHorizontal) {
         ctx.scale(-1, 1)
-        ctx.translate(-drawX - currentImage.width, drawY)
+        ctx.translate(-xWithCamera - currentImage.width, yWithCamera)
       } else {
-        ctx.translate(drawX, drawY)
+        ctx.translate(xWithCamera, yWithCamera)
       }
       ctx.drawImage(currentImage, 0, playerProps.spawn.y)
       ctx.restore()
@@ -130,8 +115,6 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
   [
     playerState,
     imagesRef
-    // scrollX,
-    // scrollY
   ])
 
   const render = useCallback(() => {
@@ -164,6 +147,6 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
   }, [handleKeyDown, handleKeyUp, updateGame])
 
   return (
-    <canvas ref={canvasRef} width={canvas.width} height={canvas.height} style={{ zIndex: 10, position: 'absolute' }} />
+    <canvas ref={canvasRef} width={level.map01.width} height={level.map01.height} style={{ zIndex: 10, position: 'absolute' }} />
   )
 }
