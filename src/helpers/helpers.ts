@@ -1,4 +1,5 @@
 import { MapProgressOutput } from '../hooks/hookTypes'
+import { Collision } from '../views/maps/map01/layout/layout'
 
 /**
  *
@@ -78,4 +79,60 @@ export function between (inferiorLimit:number, superiorLimit:number, value: numb
     if (value > inferiorLimit && value < superiorLimit) return true
   }
   return false
+}
+
+/**
+ *
+ * @param numbers
+ * @returns number
+ */
+export function highestOf (numbers:number[] | undefined) {
+  return numbers?.reduce((a, b) => Math.max(a, b), 0)
+}
+/**
+ *
+ * @param numbers
+ * @returns number
+ */
+export function lowestOf (numbers:number[]) {
+  return numbers.reduce((a, b) => Math.min(a, b), numbers[0])
+}
+/**
+ *
+ * @param number
+ * @param values
+ * @returns number
+ */
+export function closestTo (number:number, values:number[]) {
+  return values.reduce((prev, acc) => {
+    return Math.abs(number - prev) > Math.abs(number - acc) ? acc : prev
+  }, 0)
+}
+/**
+ *
+ * @param valueY
+ * @returns number
+ */
+export function toggleY (valueY:number) {
+  return 224 - valueY
+}
+/**
+ *
+ * @param collisions
+ * @param playerX
+ * @returns boolean
+ */
+export function obstacleLeft (collisions:Collision[], playerX) {
+  const collision = collisions.find((hc) => (hc.x - playerX) <= 32)
+  return (!!collision && collision?.x < playerX)
+}
+/**
+ *
+ * @param collisions
+ * @param playerX
+ * @returns boolean
+ */
+export function obstacleRight (collisions:Collision[], playerX) {
+  const collision = collisions.find((hc) => (playerX - hc.x) <= 32)
+  return (!!collision && collision?.x > playerX)
 }

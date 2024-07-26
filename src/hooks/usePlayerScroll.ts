@@ -42,7 +42,6 @@ export const usePlayerScroll = (playerState, shouldEnableScrolling:boolean, tile
         somewhatEquals(Math.round(x), Math.round(canvas.width - (canvas.width / 3)), 40) &&
         !playerInLeftEdge(tileData)
       ) {
-        console.log('???????????')
         handleScrollX(canvas.width - (canvas.width / 3))
       }
       if (action === 'jump' && Math.abs(y) === 100) {

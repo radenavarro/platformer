@@ -5,11 +5,13 @@ import { useLevelImages } from '../../../hooks/useLevelImages'
 import { levelLayout } from './layout/map01'
 import { useGameStore } from '../../../zustand/store'
 import { between, playerInAnyBoundary } from '../../../helpers/helpers'
+import { useTileInfo } from '../../../hooks/useTileInfo'
 
-export const Map01 = ({ camera, tileData }) => {
+export const Map01 = ({ camera }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const tilesRef = useRef(level.map01.tiles)
   const { imagesRef, imagesLoaded } = useLevelImages({ levelMap: level.map01.tiles })
+  const { tileInfo, setTileInfo } = useGameStore().map01
 
   useEffect(() => {
     if (imagesLoaded) {
@@ -18,6 +20,8 @@ export const Map01 = ({ camera, tileData }) => {
     }
   }, [imagesLoaded, camera])
 
+  // const tiles = useTileInfo(levelLayout)
+  // console.log(tiles)
   // useEffect(() => {
   //   if (imagesLoaded && !playerInAnyBoundary(tileData)) {
   //     createLayout()

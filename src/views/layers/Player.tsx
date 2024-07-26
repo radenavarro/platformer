@@ -9,6 +9,8 @@ import { useGameStore } from '../../zustand/store'
 import { Camera, MapProgressOutput } from '../../hooks/hookTypes'
 import { playerInAnyBoundary, playerInLeftEdge } from '../../helpers/helpers'
 import { level } from '../../constants/level'
+import { useCollision } from '../../hooks/useCollision'
+import { levelLayout } from '../maps/map01/layout/map01'
 
 export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: MapProgressOutput }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -33,6 +35,9 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
   // Zustand
   const { setPlayerX, setPlayerY } = useGameStore().player
 
+  // Colisiones
+  const { collidingBlocks } = useCollision(player, levelLayout, level.map01)
+
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     keysPressed.current[e.key] = true
   }, [])
@@ -45,7 +50,8 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
     player.update(
       deltaTime,
       keysPressed.current,
-      tileData
+      tileData,
+      collidingBlocks
     )
 
     const { x, y } = player.getPosition()
@@ -93,7 +99,7 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
     const currentAction = `${action}${direction.charAt(0).toUpperCase() + direction.slice(1)}`
 
     const spriteInfo = spritesRef.current[currentAction]
-    const currentImage = imagesRef.current[currentAction][currentFrame]
+    const currentImage = imagesRef.current?.[currentAction]?.[currentFrame]
 
     if (currentImage) {
       ctx.save()

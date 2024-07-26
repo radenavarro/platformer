@@ -1,13 +1,13 @@
-import { playerInAnyBoundary } from '../helpers/helpers'
+import { canvas } from '../constants/canvas'
+import { playerProps } from '../constants/player'
+import { between, closestTo, highestOf, isBeside, lowestOf, obstacleLeft, obstacleRight, toggleY } from '../helpers/helpers'
 import { MapProgressOutput } from '../hooks/hookTypes'
-import { Action } from './types'
+import { Collision, Tile } from '../views/maps/map01/layout/layout'
+import { Action, Entity } from './types'
 
-interface PlayerInterface {
-    getSpeed: () => number,
+interface PlayerInterface extends Entity {
     getJumpHeight: () => number,
     update: (deltaTime:number, keys:{ a: boolean; d: boolean; w: boolean }, tileData: MapProgressOutput) => void
-    getPosition: () => { x: number, y: number }
-    getAction: () => Action
 }
 
 export class Player implements PlayerInterface {
@@ -60,16 +60,25 @@ export class Player implements PlayerInterface {
   public update (
     deltaTime: number,
     keys: { a: boolean; d: boolean; w: boolean },
-    tileData: MapProgressOutput
+    tileData: MapProgressOutput,
+    playerCollisions: Collision[]
   ) {
     // Movimiento horizontal
+    const horizontalCollisions = playerCollisions.filter((pc) => (Math.round(toggleY(this.y) / 32) * 32) + 32 === pc.y)
     if (keys.a) {
-      this.x -= (this.speed * (deltaTime / 16.67))
+      if (obstacleLeft(horizontalCollisions, this.x)) {
+        this.x = Math.round(this.x / 32) * 32
+      } else {
+        this.x -= (this.speed * (deltaTime / 16.67))
+      }
 
       this.action = 'move'
     } else if (keys.d) {
-      this.x += (this.speed * (deltaTime / 16.67))
-
+      if (obstacleRight(horizontalCollisions, this.x)) {
+        this.x = Math.round(this.x / 32) * 32
+      } else {
+        this.x += (this.speed * (deltaTime / 16.67))
+      }
       this.action = 'move'
     }
     // Salto: impulso inicial
@@ -82,9 +91,14 @@ export class Player implements PlayerInterface {
     this.velocityY += (9.8 * Math.abs(this.mass)) / 1000
     this.y += this.velocityY
 
+    // Bloque justo debajo del jugador
+    const mappedYCollisions = playerCollisions?.map((pc) => pc.y) ?? []
+    const roundedY = Math.round(toggleY(this.y) / 32) * 32
+    const sueloMasCercano = mappedYCollisions.length > 0 ? toggleY(closestTo(roundedY, mappedYCollisions)) : undefined
+
     // Detectar cuando el jugador toca el suelo
-    if (this.y > 0) { // 0 = nivel de suelo
-      this.y = 0
+    if (sueloMasCercano && !isNaN(sueloMasCercano) && this.y > sueloMasCercano) { // 64 = nivel de suelo
+      this.y = sueloMasCercano
       this.velocityY = 0
       this.isJumping = false
     }
@@ -94,6 +108,10 @@ export class Player implements PlayerInterface {
 
   getPosition () {
     return { x: this.x, y: this.y }
+  }
+
+  getAbsolutePosition (levelHeight:number) {
+    return { x: this.x, y: 192 - this.y }
   }
 
   getAction () {

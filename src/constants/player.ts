@@ -9,12 +9,12 @@ export const playerSprites = (Object.freeze(() => {
     idleRight: {
       sprites: [idleSprite],
       flipHorizontal: false,
-      frameRate: 10
+      frameRate: 4
     },
     idleLeft: {
       sprites: [idleSprite],
       flipHorizontal: true,
-      frameRate: 10
+      frameRate: 4
     },
     moveRight: {
       sprites: [
@@ -22,10 +22,10 @@ export const playerSprites = (Object.freeze(() => {
         run2Sprite,
         run3Sprite
       ],
-      order: [1, 2, 1, 3],
+      order: [1, 2, 3, 4],
       flipHorizontal: false,
       loop: true,
-      frameRate: 10
+      frameRate: 4
     },
     moveLeft: {
       sprites: [
@@ -33,10 +33,10 @@ export const playerSprites = (Object.freeze(() => {
         run2Sprite,
         run3Sprite
       ],
-      order: [1, 2, 1, 3],
+      order: [1, 2, 3, 4],
       flipHorizontal: true,
       loop: true,
-      frameRate: 10
+      frameRate: 4
     },
     jumpRight: {
       sprites: [
@@ -44,10 +44,10 @@ export const playerSprites = (Object.freeze(() => {
         run2Sprite,
         run3Sprite
       ],
-      order: [1, 2, 1, 3],
+      order: [1, 2, 3, 4],
       flipHorizontal: false,
       loop: true,
-      frameRate: 10
+      frameRate: 4
     },
     jumpLeft: {
       sprites: [
@@ -55,10 +55,10 @@ export const playerSprites = (Object.freeze(() => {
         run2Sprite,
         run3Sprite
       ],
-      order: [1, 2, 1, 3],
+      order: [1, 2, 3, 4],
       flipHorizontal: true,
       loop: true,
-      frameRate: 10
+      frameRate: 4
     }
   }
 }))()
@@ -67,7 +67,7 @@ export const playerProps = (Object.freeze(() => {
   return {
     spawn: {
       x: 32 * 3,
-      y: 32 * 10
+      y: 32 * 10// Hay que recordar que "y" va de arriba a abajo, es decir, 0 es la parte superior, y cuanto más positivo es, más abajo estará el puntero
     }
   }
 }))()

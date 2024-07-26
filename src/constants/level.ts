@@ -5,7 +5,7 @@ export const level = (Object.freeze(() => {
     map01: {
       width: 32 * 50,
       height: 32 * 19,
-      groundLevel: 32 * 10,
+      groundLevel: 64,
       tiles: {
         empty: {
           blocksPlayer: false,
