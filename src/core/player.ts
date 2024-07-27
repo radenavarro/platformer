@@ -1,6 +1,6 @@
 import { canvas } from '../constants/canvas'
 import { playerProps } from '../constants/player'
-import { between, closestTo, highestOf, isBeside, lowestOf, obstacleLeft, obstacleRight, toggleY } from '../helpers/helpers'
+import { between, closestTo, highestOf, isBeside, lowestOf, obstacleLeft, obstacleRight, toggleY, toggleYCoords } from '../helpers/helpers'
 import { MapProgressOutput } from '../hooks/hookTypes'
 import { Collision, Tile } from '../views/maps/map01/layout/layout'
 import { Action, Entity } from './types'
@@ -64,7 +64,7 @@ export class Player implements PlayerInterface {
     playerCollisions: Collision[]
   ) {
     // Movimiento horizontal
-    const horizontalCollisions = playerCollisions.filter((pc) => (Math.round(toggleY(this.y) / 32) * 32) + 32 === pc.y)
+    const horizontalCollisions = playerCollisions.filter((pc) => (Math.round(toggleY(this.y, playerProps.spawn.y) / 32) * 32) + 32 === pc.y)
     if (keys.a) {
       if (obstacleLeft(horizontalCollisions, this.x)) {
         this.x = Math.round(this.x / 32) * 32
@@ -93,8 +93,9 @@ export class Player implements PlayerInterface {
 
     // Bloque justo debajo del jugador
     const mappedYCollisions = playerCollisions?.map((pc) => pc.y) ?? []
-    const roundedY = Math.round(toggleY(this.y) / 32) * 32
-    const sueloMasCercano = mappedYCollisions.length > 0 ? toggleY(closestTo(roundedY, mappedYCollisions)) : undefined
+    const roundedY = Math.round(toggleY(this.y, playerProps.spawn.y) / 32) * 32
+
+    const sueloMasCercano = mappedYCollisions.length > 0 ? toggleY(closestTo(roundedY, mappedYCollisions), playerProps.spawn.y) : undefined
 
     // Detectar cuando el jugador toca el suelo
     if (sueloMasCercano && !isNaN(sueloMasCercano) && this.y > sueloMasCercano) { // 64 = nivel de suelo

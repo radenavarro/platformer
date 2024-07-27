@@ -108,14 +108,27 @@ export function closestTo (number:number, values:number[]) {
     return Math.abs(number - prev) > Math.abs(number - acc) ? acc : prev
   }, 0)
 }
+
 /**
+ * Una vez se pinta un elemento en el canvas (como el jugador), su valor de y puede ser cualquiera pero para él, ese valor va a ser su 0. Esta
+ * función correlaciona su valor de "y" relativo a ese elemento con el valor de "y" que usan los elementos de un nivel.
  *
- * @param valueY
+ * La función asume que el tamaño de tile <strong>siempre</strong> va a ser 32 y el tamaño del canvas <strong>siempre</strong> va a ser 600.
+ * @param playerY
+ * @param spawnY
  * @returns number
  */
-export function toggleY (valueY:number) {
-  return 224 - valueY
+export function toggleY (playerY: number, spawnY: number) {
+  const tileSize = 32
+  const canvasHeight = 600
+
+  const realY = spawnY + playerY
+  const visibleTiles = Math.floor(canvasHeight / tileSize)
+  const maxMappingHeight = (visibleTiles - 1) * tileSize
+
+  return maxMappingHeight - realY
 }
+
 /**
  *
  * @param collisions
