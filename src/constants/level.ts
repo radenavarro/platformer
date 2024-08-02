@@ -3,7 +3,7 @@ import { map01Tiles } from './mapTiles'
 export const level = (Object.freeze(() => {
   return {
     map01: {
-      width: 32 * 50,
+      width: 32 * 100,
       height: 32 * 19,
       groundLevel: 64,
       tiles: {

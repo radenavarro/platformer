@@ -36,3 +36,5 @@ export interface Entity {
 }
 
 export type LevelProps = typeof level.map01
+
+export type KeysPressed = { a: boolean; d: boolean; w: boolean }

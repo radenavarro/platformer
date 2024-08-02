@@ -22,7 +22,7 @@ export const useCollision = (entity:Entity, levelLayout:LevelLayout, levelProps:
         between(tile.x, tile.x + 32, entityCoords.x + 32, true)
       ) && (
         between(tile.y, tile.y + 32, entityCoords.y + 64, true) ||
-        between(tile.y, tile.y + 32, entityCoords.y + 96, true)
+        between(tile.y, tile.y + 32, entityCoords.y + 128, true)
       )
     })
 

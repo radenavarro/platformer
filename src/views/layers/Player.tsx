@@ -30,7 +30,7 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
   const animationFrameId = useRef<number | null>(null)
   const spritesRef = useRef(playerSprites)
   const { imagesRef, imagesLoaded } = useSprites({ spriteReference: spritesRef })
-  const player = useRef(new PlayerEntity(0, 0, 4, 55, -10)).current
+  const player = useRef(new PlayerEntity(0, 0, 4, 3500, -10)).current
 
   // Zustand
   const { setPlayerX, setPlayerY } = useGameStore().player

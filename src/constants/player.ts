@@ -2,7 +2,6 @@ import idleSprite from '../assets/pj/idle.png'
 import run1Sprite from '../assets/pj/run1.png'
 import run2Sprite from '../assets/pj/run2.png'
 import run3Sprite from '../assets/pj/run3.png'
-import { canvas } from './canvas'
 
 export const playerSprites = (Object.freeze(() => {
   return {

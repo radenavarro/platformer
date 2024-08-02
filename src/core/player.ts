@@ -1,13 +1,17 @@
-import { canvas } from '../constants/canvas'
 import { playerProps } from '../constants/player'
-import { between, closestTo, highestOf, isBeside, lowestOf, obstacleLeft, obstacleRight, toggleY, toggleYCoords } from '../helpers/helpers'
+import { closestTo, obstacleLeft, obstacleRight, toggleY } from '../helpers/helpers'
 import { MapProgressOutput } from '../hooks/hookTypes'
-import { Collision, Tile } from '../views/maps/map01/layout/layout'
-import { Action, Entity } from './types'
+import { Collision } from '../views/maps/map01/layout/layout'
+import { Action, Entity, KeysPressed } from './types'
 
 interface PlayerInterface extends Entity {
     getJumpHeight: () => number,
-    update: (deltaTime:number, keys:{ a: boolean; d: boolean; w: boolean }, tileData: MapProgressOutput) => void
+    update: (
+      deltaTime: number,
+      keys: KeysPressed,
+      tileData: MapProgressOutput,
+      playerCollisions: Collision[]
+    ) => void
 }
 
 export class Player implements PlayerInterface {
@@ -22,6 +26,8 @@ export class Player implements PlayerInterface {
   private action: Action
   private mass: number
   private trespassMapBounds: boolean = false
+  private hitbox: {width: number; height: number} = { width: 32, height: 32 }
+  private updates:number = 0
 
   constructor (
     x:number = 0,
@@ -59,14 +65,65 @@ export class Player implements PlayerInterface {
 
   public update (
     deltaTime: number,
-    keys: { a: boolean; d: boolean; w: boolean },
+    keys: KeysPressed,
     tileData: MapProgressOutput,
     playerCollisions: Collision[]
   ) {
+    // Constantes
+    const tileSide = 32
+    const spawnY = playerProps.spawn.y
+
+    // Gravedad
+    this.velocityY += (9.8 * Math.abs(this.mass)) / 1000 * (deltaTime / 1000)
+
     // Movimiento horizontal
-    const horizontalCollisions = playerCollisions.filter((pc) => (Math.round(toggleY(this.y, playerProps.spawn.y) / 32) * 32) + 32 === pc.y)
+    const horizontalCollisions = playerCollisions.filter((pc) => (Math.round(toggleY(this.y, spawnY) / 32) * 32) + 32 === pc.y)
+    this.handleXMovement(keys, horizontalCollisions, deltaTime)
+
+    // Salto: impulso inicial
+    if (keys.w && !this.isJumping) {
+      this.velocityY = this.getJumpHeight()
+      this.isJumping = true
+    }
+
+    // Calcular la posición Y futura
+    let nextY = this.y + this.velocityY
+
+    // Calcular colisiones
+    const mappedYCollisions = playerCollisions?.map((pc) => pc.y) ?? []
+    const mapRelativeNextY = Math.round(toggleY(nextY, spawnY))
+    const closestY = closestTo(mapRelativeNextY, mappedYCollisions)
+
+    // Manejar colisión con el techo
+    if (
+      closestY &&
+      (closestY - tileSide) < (mapRelativeNextY + (this.hitbox.height * 1.5)) &&// Normalmente sería solo this.hitbox.height pero he tenido que hacerlo un poco más laxo porque de lo contrario no se daba la condición
+      Math.abs((mapRelativeNextY + this.hitbox.height) - (closestY - tileSide)) < 32
+    ) {
+      this.velocityY = 0
+    }
+
+    // Manejar colisión con el suelo
+    if (
+      closestY &&
+      closestY > mapRelativeNextY &&
+      Math.abs(closestY - mapRelativeNextY) < 64// Lo lógico habría sido pensar que la diferencia tendría que ser menor de 32, pero de nuevo he tenido que ser más generoso, de lo contrario el jugador aparecía incrustado en el suelo
+    ) {
+      nextY = toggleY(closestY, spawnY)
+      this.velocityY = 0
+      this.isJumping = false
+    }
+
+    // Actualizar posición Y al final
+    this.y = nextY
+
+    if (!Object.entries(keys)?.find((k) => !!k[1])) this.action = 'idle'
+    this.updates += 1// TODO: Esto es para depurar, cuando no se necesite hay que eliminarlo
+  }
+
+  private handleXMovement (keys: KeysPressed, collisions:Collision[], deltaTime:number) {
     if (keys.a) {
-      if (obstacleLeft(horizontalCollisions, this.x)) {
+      if (obstacleLeft(collisions, this.x)) {
         this.x = Math.round(this.x / 32) * 32
       } else {
         this.x -= (this.speed * (deltaTime / 16.67))
@@ -74,37 +131,13 @@ export class Player implements PlayerInterface {
 
       this.action = 'move'
     } else if (keys.d) {
-      if (obstacleRight(horizontalCollisions, this.x)) {
+      if (obstacleRight(collisions, this.x)) {
         this.x = Math.round(this.x / 32) * 32
       } else {
         this.x += (this.speed * (deltaTime / 16.67))
       }
       this.action = 'move'
     }
-    // Salto: impulso inicial
-    if (keys.w && !this.isJumping) {
-      this.velocityY = this.getJumpHeight()
-      this.isJumping = true
-    }
-
-    // Gravedad
-    this.velocityY += (9.8 * Math.abs(this.mass)) / 1000
-    this.y += this.velocityY
-
-    // Bloque justo debajo del jugador
-    const mappedYCollisions = playerCollisions?.map((pc) => pc.y) ?? []
-    const roundedY = Math.round(toggleY(this.y, playerProps.spawn.y) / 32) * 32
-
-    const sueloMasCercano = mappedYCollisions.length > 0 ? toggleY(closestTo(roundedY, mappedYCollisions), playerProps.spawn.y) : undefined
-
-    // Detectar cuando el jugador toca el suelo
-    if (sueloMasCercano && !isNaN(sueloMasCercano) && this.y > sueloMasCercano) { // 64 = nivel de suelo
-      this.y = sueloMasCercano
-      this.velocityY = 0
-      this.isJumping = false
-    }
-
-    if (!Object.entries(keys)?.find((k) => !!k[1])) this.action = 'idle'
   }
 
   getPosition () {

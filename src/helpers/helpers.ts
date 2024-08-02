@@ -101,12 +101,16 @@ export function lowestOf (numbers:number[]) {
  *
  * @param number
  * @param values
- * @returns number
+ * @returns number | undefined
  */
 export function closestTo (number:number, values:number[]) {
-  return values.reduce((prev, acc) => {
+  const res = values.reduce((prev, acc) => {
     return Math.abs(number - prev) > Math.abs(number - acc) ? acc : prev
   }, 0)
+  if (res === 0 && values.length === 0) {
+    return undefined
+  }
+  return res
 }
 
 /**
