@@ -74,11 +74,10 @@ export class Player implements PlayerInterface {
     const spawnY = playerProps.spawn.y
 
     // Gravedad
-    this.velocityY += (9.8 * Math.abs(this.mass)) / 1000 * (deltaTime / 1000)
+    this.velocityY += (9.8 * Math.abs(this.mass)) / 1000
 
     // Movimiento horizontal
-    const horizontalCollisions = playerCollisions.filter((pc) => (Math.round(toggleY(this.y, spawnY) / 32) * 32) + 32 === pc.y)
-    this.handleXMovement(keys, horizontalCollisions, deltaTime)
+    this.handleXMovement(keys, playerCollisions, deltaTime)
 
     // Salto: impulso inicial
     if (keys.w && !this.isJumping) {
@@ -93,6 +92,15 @@ export class Player implements PlayerInterface {
     const mappedYCollisions = playerCollisions?.map((pc) => pc.y) ?? []
     const mapRelativeNextY = Math.round(toggleY(nextY, spawnY))
     const closestY = closestTo(mapRelativeNextY, mappedYCollisions)
+    console.log(mappedYCollisions + ' update: ' + this.updates)
+
+    // Si hay suelo debajo, se define al jugador como que está saltando para que no caiga de golpe
+    if (
+      (!closestY || closestY > mapRelativeNextY) &&
+      !this.isJumping
+    ) {
+      this.isJumping = true
+    }
 
     // Manejar colisión con el techo
     if (
@@ -109,6 +117,7 @@ export class Player implements PlayerInterface {
       closestY > mapRelativeNextY &&
       Math.abs(closestY - mapRelativeNextY) < 64// Lo lógico habría sido pensar que la diferencia tendría que ser menor de 32, pero de nuevo he tenido que ser más generoso, de lo contrario el jugador aparecía incrustado en el suelo
     ) {
+      console.log(closestY + ' update: ' + this.updates)
       nextY = toggleY(closestY, spawnY)
       this.velocityY = 0
       this.isJumping = false
@@ -121,9 +130,17 @@ export class Player implements PlayerInterface {
     this.updates += 1// TODO: Esto es para depurar, cuando no se necesite hay que eliminarlo
   }
 
+  /**
+   *
+   * @param keys
+   * @param collisions
+   * @param deltaTime
+   */
   private handleXMovement (keys: KeysPressed, collisions:Collision[], deltaTime:number) {
+    const spawnY = playerProps.spawn.y
+    const horizontalCollisions = collisions.filter((pc) => (Math.round(toggleY(this.y, spawnY) / 32) * 32) + 32 === pc.y)
     if (keys.a) {
-      if (obstacleLeft(collisions, this.x)) {
+      if (obstacleLeft(horizontalCollisions, this.x)) {
         this.x = Math.round(this.x / 32) * 32
       } else {
         this.x -= (this.speed * (deltaTime / 16.67))
@@ -131,7 +148,7 @@ export class Player implements PlayerInterface {
 
       this.action = 'move'
     } else if (keys.d) {
-      if (obstacleRight(collisions, this.x)) {
+      if (obstacleRight(horizontalCollisions, this.x)) {
         this.x = Math.round(this.x / 32) * 32
       } else {
         this.x += (this.speed * (deltaTime / 16.67))
