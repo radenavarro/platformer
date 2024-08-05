@@ -21,7 +21,7 @@ export const levelLayout:LevelLayout = [
   [...tile.abbr('_').times(100)],
   [...tile.abbr('_').times(100)],
   [...tile.abbr('_').times(100)],
-  [...tile.abbr('_').times(100)],
+  [...tile.abbr('_').times(30), ...tile.abbr('-').times(2), ...tile.abbr('_').times(68)],
   [...tile.abbr('_').times(100)],
   [...tile.abbr('_').times(100)],
   [...tile.abbr('_').times(100)],

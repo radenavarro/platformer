@@ -92,7 +92,7 @@ export class Player implements PlayerInterface {
     const mappedYCollisions = playerCollisions?.map((pc) => pc.y) ?? []
     const mapRelativeNextY = Math.round(toggleY(nextY, spawnY))
     const closestY = closestTo(mapRelativeNextY, mappedYCollisions)
-    console.log(mappedYCollisions + ' update: ' + this.updates)
+    // console.log(mappedYCollisions + ' update: ' + this.updates)
 
     // Si hay suelo debajo, se define al jugador como que está saltando para que no caiga de golpe
     if (
@@ -117,7 +117,6 @@ export class Player implements PlayerInterface {
       closestY > mapRelativeNextY &&
       Math.abs(closestY - mapRelativeNextY) < 64// Lo lógico habría sido pensar que la diferencia tendría que ser menor de 32, pero de nuevo he tenido que ser más generoso, de lo contrario el jugador aparecía incrustado en el suelo
     ) {
-      console.log(closestY + ' update: ' + this.updates)
       nextY = toggleY(closestY, spawnY)
       this.velocityY = 0
       this.isJumping = false
