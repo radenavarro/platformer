@@ -63,29 +63,37 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
     setPlayerY(y)
     // Actualizar estado player en componente
     setPlayerState((prev) => {
-      const newState:GameState = {
+      const newState: GameState = {
         ...prev,
         x,
         y,
         spriteX,
         spriteY,
         action,
-        direction: keysPressed.current.a ? 'left' : (keysPressed.current.d ? 'right' : prev.direction)
+        direction: keysPressed.current.a ? 'left' : (keysPressed.current.d ? 'right' : prev.direction),
+        timeAccumulator: prev.timeAccumulator + deltaTime// Lleva un registro del tiempo que ha pasado para determinar cuándo es necesario cambiar al siguiente frame de la animación
       }
 
-      // Actualizar sprite
       const currentAction = `${action}${newState.direction.charAt(0).toUpperCase() + newState.direction.slice(1)}`
       const spriteInfo = spritesRef.current[currentAction]
 
       if (spriteInfo) {
         newState.frameRate = spriteInfo.frameRate
-        newState.frameCount = (prev.frameCount + 1) % newState.frameRate
-        if (newState.frameCount === 0 || action !== prev.action || newState.direction !== prev.direction) {
+        const frameDuration = 1000 / newState.frameRate// El tiempo que debe durar cada frame de la animación
+
+        // Reiniciar el acumulador si cambia la acción o dirección
+        if (action !== prev.action || newState.direction !== prev.direction) {
+          newState.timeAccumulator = 0
+          newState.currentFrame = 0
+        }
+
+        while (newState.timeAccumulator >= frameDuration) { // evita que la animación se "salte" frames cuando el tiempo entre actualizaciones es grande
+          newState.timeAccumulator -= frameDuration
           if (spriteInfo.order) {
-            const orderIndex = (prev.currentFrame + 1) % spriteInfo.order.length
+            const orderIndex = (newState.currentFrame + 1) % spriteInfo.order.length
             newState.currentFrame = spriteInfo.order[orderIndex] - 1
           } else {
-            newState.currentFrame = (prev.currentFrame + 1) % spriteInfo.sprites.length
+            newState.currentFrame = (newState.currentFrame + 1) % spriteInfo.sprites.length
           }
         }
       }

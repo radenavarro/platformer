@@ -166,7 +166,7 @@ export class Player implements PlayerInterface {
 
   getAction () {
     if (this.isJumping) return 'jump'
-    if (this.velocityY !== 0) return 'fall'
+    if (Math.round(this.velocityY) !== 0) return 'fall'
     return this.action
   }
 
