@@ -23,6 +23,15 @@ export const level = (Object.freeze(() => {
           height: 32,
           abbr: '-'
         },
+        spikedfloor: {
+          blocksPlayer: true,
+          blocksEnemies: true,
+          src: map01Tiles.spikedfloor,
+          width: 32,
+          height: 32,
+          abbr: '^',
+          killsPlayer: true
+        },
         ground: {
           blocksPlayer: true,
           blocksEnemies: true,

@@ -28,6 +28,8 @@ export class Player implements PlayerInterface {
   private trespassMapBounds: boolean = false
   private hitbox: {width: number; height: number} = { width: 32, height: 32 }
   private updates:number = 0
+  private isRespawning:boolean = false
+  private initialParams: {x?:number; y?:number; speed?:number; mass?:number; jumpVelocity?:number; isJumping?:boolean; action?:Action; spriteX?:number; spriteY?:number} = {}
 
   constructor (
     x:number = 0,
@@ -49,6 +51,9 @@ export class Player implements PlayerInterface {
     this.isJumping = isJumping
     this.action = action
     this.mass = mass
+    this.initialParams = {
+      x, y, spriteX, spriteY, speed, jumpVelocity, isJumping, action, mass
+    }
   }
 
   public getSpeed () {
@@ -80,7 +85,7 @@ export class Player implements PlayerInterface {
     this.handleXMovement(keys, playerCollisions, deltaTime)
 
     // Salto: impulso inicial
-    if (keys.w && !this.isJumping) {
+    if (keys.w && !this.isJumping && this.action !== 'death') {
       this.velocityY = this.getJumpHeight()
       this.isJumping = true
     }
@@ -92,7 +97,6 @@ export class Player implements PlayerInterface {
     const mappedYCollisions = playerCollisions?.map((pc) => pc.y) ?? []
     const mapRelativeNextY = Math.round(toggleY(nextY, spawnY))
     const closestY = closestTo(mapRelativeNextY, mappedYCollisions)
-    // console.log(mappedYCollisions + ' update: ' + this.updates)
 
     // Si hay suelo debajo, se define al jugador como que está saltando para que no caiga de golpe
     if (
@@ -102,6 +106,7 @@ export class Player implements PlayerInterface {
       this.isJumping = true
     }
 
+    const isHazard = playerCollisions.find((pc) => pc.y === closestY && pc.killsPlayer)
     // Manejar colisión con el techo
     if (
       closestY &&
@@ -109,6 +114,9 @@ export class Player implements PlayerInterface {
       Math.abs((mapRelativeNextY + this.hitbox.height) - (closestY - tileSide)) < 32
     ) {
       this.velocityY = 0
+      if (isHazard) {
+        this.action = 'death'
+      }
     }
 
     // Manejar colisión con el suelo
@@ -120,12 +128,27 @@ export class Player implements PlayerInterface {
       nextY = toggleY(closestY, spawnY)
       this.velocityY = 0
       this.isJumping = false
+      if (isHazard) {
+        this.action = 'death'
+      }
+    }
+
+    if (this.action === 'death' && !this.isRespawning) {
+      this.isRespawning = true
+      setTimeout(() => {
+        this.x = this.initialParams.x ?? 0
+        this.y = this.initialParams.y ?? 0
+        this.action = 'idle'
+        this.isRespawning = false
+      }, 3000)
+      return
     }
 
     // Actualizar posición Y al final
     this.y = nextY
 
-    if (!Object.entries(keys)?.find((k) => !!k[1])) this.action = 'idle'
+    if (!Object.entries(keys)?.find((k) => !!k[1]) && !this.isRespawning) this.action = 'idle'
+
     this.updates += 1// TODO: Esto es para depurar, cuando no se necesite hay que eliminarlo
   }
 
@@ -136,6 +159,7 @@ export class Player implements PlayerInterface {
    * @param deltaTime
    */
   private handleXMovement (keys: KeysPressed, collisions:Collision[], deltaTime:number) {
+    if (this.action === 'death') return
     const spawnY = playerProps.spawn.y
     const horizontalCollisions = collisions.filter((pc) => (Math.round(toggleY(this.y, spawnY) / 32) * 32) + 32 === pc.y)
     if (keys.a) {

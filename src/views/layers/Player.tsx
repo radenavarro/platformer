@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { canvas } from '../../constants/canvas'
-import { Action, Direction, GameState } from '../../core/types'
+import { GameState } from '../../core/types'
 import { Player as PlayerEntity } from '../../core/player'
 import { useSprites } from '../../hooks/useSprites'
 import { playerProps, playerSprites } from '../../constants/player'
 import { useGameLoop } from '../../hooks/useGameLoop'
 import { useGameStore } from '../../zustand/store'
 import { Camera, MapProgressOutput } from '../../hooks/hookTypes'
-import { playerInAnyBoundary, playerInLeftEdge } from '../../helpers/helpers'
+import { playerInLeftEdge } from '../../helpers/helpers'
 import { level } from '../../constants/level'
 import { useCollision } from '../../hooks/useCollision'
 import { levelLayout } from '../maps/map01/layout/map01'
@@ -74,7 +73,7 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
         timeAccumulator: prev.timeAccumulator + deltaTime// Lleva un registro del tiempo que ha pasado para determinar cuándo es necesario cambiar al siguiente frame de la animación
       }
 
-      const currentAction = `${action}${newState.direction.charAt(0).toUpperCase() + newState.direction.slice(1)}`
+      const currentAction = action === 'death' ? action : `${action}${newState.direction.charAt(0).toUpperCase() + newState.direction.slice(1)}`
       const spriteInfo = spritesRef.current[currentAction]
 
       if (spriteInfo) {
@@ -87,13 +86,24 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
           newState.currentFrame = 0
         }
 
-        while (newState.timeAccumulator >= frameDuration) { // evita que la animación se "salte" frames cuando el tiempo entre actualizaciones es grande
-          newState.timeAccumulator -= frameDuration
+        // Lógica para sprites que no hacen bucle, de 1 solo uso
+        if (!spriteInfo.loop) {
+          if (newState.currentFrame === spriteInfo.order.length - 1) return newState
           if (spriteInfo.order) {
-            const orderIndex = (newState.currentFrame + 1) % spriteInfo.order.length
-            newState.currentFrame = spriteInfo.order[orderIndex] - 1
+            newState.currentFrame = (newState.currentFrame + 1) % spriteInfo.order.length
           } else {
             newState.currentFrame = (newState.currentFrame + 1) % spriteInfo.sprites.length
+          }
+        } else {
+          // Lógica para el resto de sprites
+          while (newState.timeAccumulator >= frameDuration) { // evita que la animación se "salte" frames cuando el tiempo entre actualizaciones es grande
+            newState.timeAccumulator -= frameDuration
+            if (spriteInfo.order) {
+              const orderIndex = (newState.currentFrame + 1) % spriteInfo.order.length
+              newState.currentFrame = spriteInfo.order[orderIndex] - 1
+            } else {
+              newState.currentFrame = (newState.currentFrame + 1) % spriteInfo.sprites.length
+            }
           }
         }
       }
@@ -104,8 +114,7 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
 
   const drawPlayer = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     const { action, direction, currentFrame, x, y }: GameState = playerState
-    const currentAction = `${action}${direction.charAt(0).toUpperCase() + direction.slice(1)}`
-
+    const currentAction = action === 'death' ? action : `${action}${direction.charAt(0).toUpperCase() + direction.slice(1)}`
     const spriteInfo = spritesRef.current[currentAction]
     const currentImage = imagesRef.current?.[currentAction]?.[currentFrame]
 
@@ -122,6 +131,7 @@ export const PlayerLayer = ({ camera, tileData } : { camera:Camera, tileData: Ma
       } else {
         ctx.translate(xWithCamera, yWithCamera)
       }
+
       ctx.drawImage(currentImage, 0, playerProps.spawn.y)
       ctx.restore()
     }

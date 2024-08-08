@@ -1,6 +1,6 @@
 import { level } from '../constants/level'
 
-export type Action = 'idle' | 'move' | 'jump' | 'fall'
+export type Action = 'idle' | 'move' | 'jump' | 'fall' | 'death'
 export type Direction = 'left' | 'right'
 export type ActionDirection = 'idleLeft' | 'moveLeft' | 'jumpLeft' | 'fallLeft' | 'idleRight' | 'moveRight' | 'jumpRight' | 'fallRight'
 export type GameState = {
