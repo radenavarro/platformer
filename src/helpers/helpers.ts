@@ -52,6 +52,23 @@ export function playerInAnyBoundary (tileData:MapProgressOutput):boolean {
   return false
 }
 
+export function playerInLeftMapLimit (tileData:MapProgressOutput):boolean {
+  const { playerInTile } = tileData
+  if (playerInTile.x < 1) return true
+  return false
+}
+
+export function playerInRightMapLimit (tileData:MapProgressOutput):boolean {
+  const { playerInTile, totalTileWidth } = tileData
+  if (playerInTile?.x > (totalTileWidth - 2)) return true
+  return false
+}
+
+export function playerInAnyMapLimit (tileData:MapProgressOutput):boolean {
+  if (playerInLeftMapLimit(tileData) || playerInRightMapLimit(tileData)) return true
+  return false
+}
+
 /**
  *
  * @param value

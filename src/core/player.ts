@@ -1,5 +1,5 @@
 import { playerProps } from '../constants/player'
-import { closestTo, obstacleLeft, obstacleRight, toggleY } from '../helpers/helpers'
+import { closestTo, obstacleLeft, obstacleRight, playerInLeftMapLimit, playerInRightMapLimit, toggleY } from '../helpers/helpers'
 import { MapProgressOutput } from '../hooks/hookTypes'
 import { Collision } from '../views/maps/map01/layout/layout'
 import { Action, Entity, KeysPressed } from './types'
@@ -82,7 +82,7 @@ export class Player implements PlayerInterface {
     this.velocityY += (9.8 * Math.abs(this.mass)) / 1000
 
     // Movimiento horizontal
-    this.handleXMovement(keys, playerCollisions, deltaTime)
+    this.handleXMovement(keys, playerCollisions, deltaTime, tileData)
 
     // Salto: impulso inicial
     if (keys.w && !this.isJumping && this.action !== 'death') {
@@ -158,12 +158,12 @@ export class Player implements PlayerInterface {
    * @param collisions
    * @param deltaTime
    */
-  private handleXMovement (keys: KeysPressed, collisions:Collision[], deltaTime:number) {
+  private handleXMovement (keys: KeysPressed, collisions:Collision[], deltaTime:number, tileData:MapProgressOutput) {
     if (this.action === 'death') return
     const spawnY = playerProps.spawn.y
     const horizontalCollisions = collisions.filter((pc) => (Math.round(toggleY(this.y, spawnY) / 32) * 32) + 32 === pc.y)
     if (keys.a) {
-      if (obstacleLeft(horizontalCollisions, this.x)) {
+      if (obstacleLeft(horizontalCollisions, this.x) || playerInLeftMapLimit(tileData)) {
         this.x = Math.round(this.x / 32) * 32
       } else {
         this.x -= (this.speed * (deltaTime / 16.67))
@@ -171,7 +171,7 @@ export class Player implements PlayerInterface {
 
       this.action = 'move'
     } else if (keys.d) {
-      if (obstacleRight(horizontalCollisions, this.x)) {
+      if (obstacleRight(horizontalCollisions, this.x) || playerInRightMapLimit(tileData)) {
         this.x = Math.round(this.x / 32) * 32
       } else {
         this.x += (this.speed * (deltaTime / 16.67))
