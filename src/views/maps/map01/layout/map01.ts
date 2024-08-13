@@ -1,13 +1,12 @@
 import { level } from '../../../../constants/level'
-import { LevelLayout } from './layout'
 
 const tiles = level.map01.tiles
 
 const tile = (() => {
   return {
-    abbr: (tl) => {
+    abbr: (tl:string) => {
       return {
-        times: (tms) => {
+        times: (tms:number):string[] => {
           return Array(tms).fill(tl)
         }
       }
@@ -15,7 +14,7 @@ const tile = (() => {
   }
 })()
 
-export const levelLayout:LevelLayout = [
+export const levelLayout = [
   [...tile.abbr('_').times(100)],
   [...tile.abbr('_').times(100)],
   [...tile.abbr('_').times(100)],

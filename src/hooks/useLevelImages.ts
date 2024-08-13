@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import { Tile } from '../views/maps/map01/layout/layout'
 
-export const useLevelImages = ({ levelMap }) => {
+type useLevelImagesProps = {
+  levelMap: Tile[]
+}
+export const useLevelImages = ({ levelMap }:useLevelImagesProps) => {
   const imagesRef = useRef<Record<string, HTMLImageElement[]>>({})
   const [imagesLoaded, setImagesLoaded] = useState(false)
 
@@ -19,7 +23,7 @@ export const useLevelImages = ({ levelMap }) => {
     })
   }
 
-  const loadAllImages = async (lvlmap) => {
+  const loadAllImages = async (lvlmap:Tile[]) => {
     try {
       // console.log(lvlmap)
       const loadedImages: Record<string, HTMLImageElement[]> = {}

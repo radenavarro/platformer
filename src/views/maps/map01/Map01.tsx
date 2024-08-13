@@ -19,6 +19,11 @@ export const Map01 = ({ camera }) => {
       createLayout()
     }
   }, [imagesLoaded, camera])
+  useEffect(() => {
+    if (imagesLoaded) {
+      spawnEnemies()
+    }
+  }, [])
 
   // const tiles = useTileInfo(levelLayout)
   // console.log(tiles)
@@ -54,6 +59,10 @@ export const Map01 = ({ camera }) => {
 
       ctx.restore()
     }
+  }
+
+  function spawnEnemies () {
+
   }
 
   return (
